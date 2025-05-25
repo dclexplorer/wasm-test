@@ -1,0 +1,25 @@
+[package]
+name    = "main_crate"
+version = "0.1.0"
+edition = "2021"
+
+# Build the crate as a dynamic library so `wasm-bindgen` can generate JS glue
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen   = "0.2"     # no extra features needed
+wasm-bindgen-futures = "0.4"
+js-sys         = "0.3"     # SharedArrayBuffer bindings
+web-sys = { version = "0.3", features = ["DedicatedWorkerGlobalScope", "MessageEvent", "Window", "Performance", "console", "Worker", "BlobPropertyBag", "Blob", "Url"] }
+protocol-crate = { path = "../protocol-crate" }
+
+[build-dependencies]
+base64 = "0.21"
+
+# Development profile optimizations
+[profile.dev]
+opt-level = 1  # Enable some optimization even in dev
+
+[profile.dev.package."*"]
+opt-level = 2  # Optimize dependencies more
