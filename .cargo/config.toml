@@ -1,0 +1,8 @@
+[target.wasm32-unknown-unknown]
+rustflags = [
+  "-C", "link-arg=--max-memory=4294967296"
+]
+
+[unstable]
+build-std = ["std", "panic_abort"]
+build-std-features = ["panic_immediate_abort"]

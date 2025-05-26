@@ -23,10 +23,8 @@ fn main() {
     }});
 
     try {{
-        // Pass memory explicitly to wasm_bindgen
-        await wasm_bindgen(wasmBytes, {{
-            env: {{ memory }}
-        }});
+        // Pass memory directly to wasm_bindgen
+        await wasm_bindgen(wasmBytes, memory);
         console.log('[WORKER JS] WASM module initialized with shared memory');
     }} catch (err) {{
         console.error('[WORKER JS] Failed to initialize WASM module:', err);

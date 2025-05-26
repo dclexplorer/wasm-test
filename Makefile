@@ -16,7 +16,9 @@ release:
 # Clean build artifacts
 clean:
 	rm -rf webroot/pkg
-	cargo clean
+	cd worker-crate && cargo clean
+	cd main-crate && cargo clean
+	cd protocol-crate && cargo clean
 
 # Start dev server
 serve:
