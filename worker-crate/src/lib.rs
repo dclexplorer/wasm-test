@@ -1,7 +1,13 @@
+use sandbox::Sandbox;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::DedicatedWorkerGlobalScope;
 use js_sys::SharedArrayBuffer;
+
+mod runtime;
+mod console;
+mod sandbox;
+mod test_runtime;
 
 #[wasm_bindgen(start)]
 pub fn main_js() -> Result<(), JsValue> {
@@ -21,6 +27,9 @@ pub fn main_js() -> Result<(), JsValue> {
     
     global.set_onmessage(Some(onmsg.as_ref().unchecked_ref()));
     onmsg.forget();
+    
+    let sandbox = Sandbox::new()?;
+    test_runtime::TestRuntime::test_sandbox_security(&sandbox)?;
     
     Ok(())
 }
