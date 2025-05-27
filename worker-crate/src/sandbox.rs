@@ -132,19 +132,9 @@ impl Sandbox {
                 );
 
                 console.log('Executing sandboxed code with context:', proxy);
-                const result = func.call(proxy, proxy);
-                return result;
-                // Execute with deferred execution using Promise
-                /*return new Promise((resolve, reject) => {
-                    Promise.resolve().then(() => {
-                        try {
-                            
-                            resolve(result);
-                        } catch (e) {
-                            reject(e);
-                        }
-                    });
-                });*/
+                
+                // Just execute and return the result directly
+                return func.call(proxy, proxy);
             })
         "#;
         

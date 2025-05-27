@@ -1,13 +1,15 @@
 use sandbox::Sandbox;
+use scene_executor::run_scene;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::DedicatedWorkerGlobalScope;
 use js_sys::SharedArrayBuffer;
+use wasm_bindgen_futures::spawn_local;
 
-mod runtime;
-mod console;
 mod sandbox;
 mod test_runtime;
+mod sdk_runtime;
+mod scene_executor;
 
 #[wasm_bindgen(start)]
 pub fn main_js() -> Result<(), JsValue> {
@@ -28,8 +30,15 @@ pub fn main_js() -> Result<(), JsValue> {
     global.set_onmessage(Some(onmsg.as_ref().unchecked_ref()));
     onmsg.forget();
     
-    let sandbox = Sandbox::new()?;
-    test_runtime::TestRuntime::test_sandbox_security(&sandbox)?;
+    // Define your scene code here (for testing)
+    let scene_code = test_runtime::TestRuntime::get_test_sandbox_security();
+    
+    // Spawn the async task and forget about it
+    spawn_local(async move {
+        if let Err(e) = run_scene(scene_code, true, true, true).await {
+            web_sys::console::error_1(&format!("Scene execution error: {:?}", e).into());
+        }
+    });
     
     Ok(())
 }

@@ -6,3 +6,6 @@ rustflags = [
 [unstable]
 build-std = ["std", "panic_abort"]
 build-std-features = ["panic_immediate_abort"]
+
+[build]
+rustflags = ["-C", "panic=abort"]
