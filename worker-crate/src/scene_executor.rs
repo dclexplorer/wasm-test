@@ -8,7 +8,7 @@ pub struct SceneExecutor;
 
 impl SceneExecutor {
     pub async fn run(
-        scene_code: &str,
+        scene_code: &js_sys::JsString,
         can_use_websocket: bool,
         can_use_fetch: bool,
         is_preview: bool,
@@ -41,7 +41,7 @@ impl SceneExecutor {
         
         if !has_on_update && !has_on_start {
             console::error_1(&JsValue::from_str(
-                "🚨🚨🚨🚨🚨 Your scene does not export an onUpdate function. Documentation: https://dcl.gg/sdk/missing-onUpdate"
+                "🚨🚨🚨🚨🚨 Your scene does not export an onUpdate function. Documentation: https://docs.decentraland.org/contributor/runtime/execution/"
             ));
             return Err(JsValue::from_str("Scene must export onUpdate or onStart"));
         }
@@ -62,12 +62,7 @@ impl SceneExecutor {
             let update_interval_ms = 1000.0 / 30.0;
             let mut last_time = Date::now();
             
-            // Create update loop using setInterval
-            // Note: In a real implementation, you'd want to use requestAnimationFrame or similar
-            // For now, we'll just run a few iterations as an example
-            let max_iterations = 10; // Run 10 frames for testing
-            
-            for _ in 0..max_iterations {
+            loop {
                 let now = Date::now();
                 let dt_millis = now - last_time;
                 last_time = now;
@@ -77,17 +72,7 @@ impl SceneExecutor {
                 // Run update
                 SdkRuntime::run_update(on_update_func.as_ref(), dt_secs).await?;
                 SdkRuntime::run_set_immediate(set_immediate_list.as_ref()).await?;
-                
-                // Sleep for the remaining time to maintain FPS
-                let elapsed = Date::now() - now;
-                let sleep_time = (update_interval_ms - elapsed).max(0.0);
-                
-                // In a real implementation, you'd use setTimeout or similar
-                // For now, we'll just continue
-                if sleep_time > 0.0 {
-                    // Note: JavaScript's sleep would go here
-                    // await sleep(sleep_time)
-                }
+                break; // For testing, we break after one update
             }
             
             console::log_1(&JsValue::from_str("Scene executor: Completed test run"));
@@ -110,7 +95,7 @@ impl SceneExecutor {
 
 // Export a simple run function for testing
 pub async fn run_scene(
-    scene_code: String,
+    scene_code: js_sys::JsString,
     can_use_websocket: bool,
     can_use_fetch: bool,
     is_preview: bool,

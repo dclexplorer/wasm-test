@@ -10,6 +10,11 @@ crate-type = ["cdylib"]
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 js-sys = "0.3"
-web-sys = { version = "0.3", features = ["DedicatedWorkerGlobalScope", "MessageEvent", "console"] }
+web-sys = { version = "0.3", features = ["DedicatedWorkerGlobalScope", "MessageEvent", "console", "Request", "RequestInit", "Response"] }
 
 protocol-crate = { path = "../protocol-crate" }
+
+[package.metadata.wasm-pack]
+# Increase initial memory to 32MB (512 pages * 64KB per page)
+# and maximum to 256MB (4096 pages * 64KB per page)
+wasm-opt = ["-O4", "--enable-simd", "-g", "--initial-memory=33554432", "--max-memory=268435456"]

@@ -20,16 +20,12 @@ const ALLOW_LIST_ES2020: &[&str] = &[
 const BLOCK_LIST: &[&str] = &[
     // Worker APIs
     "Worker", "SharedWorker", "ServiceWorker", "ServiceWorkerContainer",
-    // Network APIs (fetch and WebSocket handled separately)
-    "XMLHttpRequest", "EventSource", 
     // Storage APIs
     "localStorage", "sessionStorage", "indexedDB", "webkitIndexedDB", "mozIndexedDB",
     // File System APIs
     "FileReader", "FileWriter", "FileSystem", "FileSystemSync",
     // Navigation/Window APIs
     "window", "location", "history", "navigator", "screen",
-    // Import/Module APIs
-    "require", "module", "exports", "import",
     // DOM APIs
     "document", "Document", "HTMLDocument", "XMLDocument",
     // Dangerous global functions
@@ -69,7 +65,7 @@ impl Sandbox {
         })
     }
 
-    pub fn custom_eval_sdk7(&self, code: &str, context: JsValue, preview_mode: bool) -> Result<JsValue, JsValue> {
+    pub fn custom_eval_sdk7(&self, code: &js_sys::JsString, context: JsValue, preview_mode: bool) -> Result<JsValue, JsValue> {
         // Convert allow_list to JavaScript array
         let js_allow_list = Array::new();
         for item in &self.allow_list {
@@ -78,9 +74,9 @@ impl Sandbox {
         
         // Convert block_list to JavaScript array
         let js_block_list = Array::new();
-        for item in &self.block_list {
+        /*for item in &self.block_list {
             js_block_list.push(&JsValue::from_str(item));
-        }
+        }*/
         
         // Create the sandboxed evaluation function
         let sandbox_code = r#"
@@ -130,8 +126,6 @@ impl Sandbox {
                         ? `with (globalThis) {eval(${JSON.stringify(code)})}` 
                         : `with (globalThis) {${code}}`
                 );
-
-                console.log('Executing sandboxed code with context:', proxy);
                 
                 // Just execute and return the result directly
                 return func.call(proxy, proxy);
@@ -143,7 +137,7 @@ impl Sandbox {
         
         // Create arguments array
         let args = Array::new();
-        args.push(&JsValue::from_str(code));
+        args.push(code);  // Pass JsString directly
         args.push(&context);
         args.push(&js_allow_list.into());
         args.push(&js_block_list.into());

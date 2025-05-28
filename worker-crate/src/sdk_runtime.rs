@@ -4,6 +4,8 @@ use js_sys::{Array, Function, Object, Promise, Reflect};
 use web_sys::console;
 use wasm_bindgen_futures::JsFuture;
 
+use crate::rust_modules;
+
 pub struct SdkRuntime;
 
 impl SdkRuntime {
@@ -28,6 +30,9 @@ impl SdkRuntime {
         // Setup fetch and WebSocket
         Self::setup_fetch(context, can_use_fetch)?;
         Self::setup_websocket(context, can_use_websocket)?;
+        
+        // Setup Deno.core.ops
+        Self::setup_ops(context)?;
         
         Ok(())
     }
@@ -65,7 +70,7 @@ impl SdkRuntime {
         Reflect::set(&console_obj, &"info".into(), info_closure.as_ref())?;
         Reflect::set(&console_obj, &"debug".into(), debug_closure.as_ref())?;
         Reflect::set(&console_obj, &"trace".into(), trace_closure.as_ref())?;
-        Reflect::set(&console_obj, &"warning".into(), warn_closure.as_ref())?;
+        Reflect::set(&console_obj, &"warn".into(), warn_closure.as_ref())?;
         Reflect::set(&console_obj, &"error".into(), error_closure.as_ref())?;
         
         // Define console property on runtime
@@ -130,13 +135,80 @@ impl SdkRuntime {
     
     fn setup_require(context: &Object) -> Result<(), JsValue> {
         // Create require function
+        let context_clone = context.clone();
         let require_closure = Closure::wrap(Box::new(move |module_name: String| -> JsValue {
-            // For now, return an error for any module
-            // In the future, this would load actual modules
-            console::warn_1(&format!("require('{}') called but module loading not implemented", module_name).into());
-            
-            // Return empty object for now
-            Object::new().into()
+            match Self::load_module(&module_name) {
+                Ok(mut module_source) => {
+                    // Remove shebang if present
+                    if module_source.starts_with("#!") {
+                        if let Some(newline_pos) = module_source.find('\n') {
+                            module_source = module_source[newline_pos + 1..].to_string();
+                        }
+                    }
+                    
+                    // Wrap the module source in a function that provides CommonJS environment
+                    let head = "(function (exports, require, module, __filename, __dirname) { (function (exports, require, module, __filename, __dirname) {";
+                    let foot = "\n}).call(this, exports, require, module, __filename, __dirname); })";
+                    let wrapped_source = format!("{}{}{}", head, module_source, foot);
+                    
+                    // Evaluate the wrapped source to get the wrapper function
+                    match js_sys::eval(&wrapped_source) {
+                        Ok(wrapper_func) => {
+                            if let Some(func) = wrapper_func.dyn_ref::<Function>() {
+                                // Create module context
+                                let module = Object::new();
+                                let exports = Object::new();
+                                Reflect::set(&module, &"exports".into(), &exports).unwrap();
+                                
+                                // Get require function from context
+                                let require_func = Reflect::get(&context_clone, &"require".into()).unwrap();
+                                
+                                // Extract filename and dirname from module name
+                                let filename = if module_name.starts_with('~') {
+                                    module_name[1..].to_string()
+                                } else {
+                                    module_name.clone()
+                                };
+                                let dirname = if let Some(slash_pos) = filename.rfind('/') {
+                                    filename[..slash_pos].to_string()
+                                } else {
+                                    String::from(".")
+                                };
+                                
+                                // Call the wrapper function with CommonJS context
+                                let args = Array::new();
+                                args.push(&exports);
+                                args.push(&require_func);
+                                args.push(&module);
+                                args.push(&JsValue::from_str(&filename));
+                                args.push(&JsValue::from_str(&dirname));
+                                
+                                match func.apply(&exports, &args) {
+                                    Ok(_) => {
+                                        // Return module.exports
+                                        Reflect::get(&module, &"exports".into()).unwrap_or(JsValue::UNDEFINED)
+                                    }
+                                    Err(e) => {
+                                        console::error_1(&format!("Error executing module '{}': {:?}", module_name, e).into());
+                                        e
+                                    }
+                                }
+                            } else {
+                                console::error_1(&format!("Module '{}' did not evaluate to a function", module_name).into());
+                                JsValue::from_str("Module evaluation error")
+                            }
+                        }
+                        Err(e) => {
+                            console::error_1(&format!("Error evaluating module '{}': {:?}", module_name, e).into());
+                            e
+                        }
+                    }
+                }
+                Err(err) => {
+                    console::error_1(&format!("Error loading module '{}': {}", module_name, err).into());
+                    JsValue::from_str(&err)
+                }
+            }
         }) as Box<dyn Fn(String) -> JsValue>);
         
         let require_descriptor = Object::new();
@@ -148,6 +220,74 @@ impl SdkRuntime {
         require_closure.forget();
         
         Ok(())
+    }
+    
+    fn load_module(module_spec: &str) -> Result<String, String> {
+        // Include the JavaScript modules as strings
+        match module_spec {
+            // User module load
+            "~scene.js" => {
+                // For WASM, we'll need to handle this differently since we don't have OpState
+                // This would need to be injected when setting up the runtime
+                Err("Scene module loading not implemented in WASM".to_string())
+            }
+            
+            // System API (only allowed for super user scene)
+            "~system/BevyExplorerApi" => {
+                // For WASM, we'll need a different way to check if it's a super user scene
+                // For now, we'll include it - you can add permission checks later
+                Ok(include_str!("js/modules/SystemApi.js").to_owned())
+            }
+            
+            // Core module loads
+            "~system/CommunicationsController" => {
+                Ok(include_str!("js/modules/CommunicationsController.js").to_owned())
+            }
+            "~system/CommsApi" => {
+                Ok(include_str!("js/modules/CommsApi.js").to_owned())
+            }
+            "~system/EngineApi" => {
+                Ok(include_str!("js/modules/EngineApi.js").to_owned())
+            }
+            "~system/EnvironmentApi" => {
+                Ok(include_str!("js/modules/EnvironmentApi.js").to_owned())
+            }
+            "~system/EthereumController" => {
+                Ok(include_str!("js/modules/EthereumController.js").to_owned())
+            }
+            "~system/Players" => {
+                Ok(include_str!("js/modules/Players.js").to_owned())
+            }
+            "~system/PortableExperiences" => {
+                Ok(include_str!("js/modules/PortableExperiences.js").to_owned())
+            }
+            "~system/RestrictedActions" => {
+                Ok(include_str!("js/modules/RestrictedActions.js").to_owned())
+            }
+            "~system/Runtime" => {
+                Ok(include_str!("js/modules/Runtime.js").to_owned())
+            }
+            "~system/Scene" => {
+                Ok(include_str!("js/modules/Scene.js").to_owned())
+            }
+            "~system/SignedFetch" => {
+                Ok(include_str!("js/modules/SignedFetch.js").to_owned())
+            }
+            "~system/Testing" => {
+                Ok(include_str!("js/modules/Testing.js").to_owned())
+            }
+            "~system/UserActionModule" => {
+                Ok(include_str!("js/modules/UserActionModule.js").to_owned())
+            }
+            "~system/UserIdentity" => {
+                Ok(include_str!("js/modules/UserIdentity.js").to_owned())
+            }
+            "~system/AdaptationLayerHelper" => {
+                Ok(include_str!("js/modules/AdaptationLayerHelper.js").to_owned())
+            }
+            
+            _ => Err(format!("Invalid module request: '{}'", module_spec))
+        }
     }
     
     fn setup_set_immediate(context: &Object) -> Result<(), JsValue> {
@@ -232,6 +372,31 @@ impl SdkRuntime {
             
             websocket_closure.forget();
         }
+        
+        Ok(())
+    }
+    
+    fn setup_ops(context: &Object) -> Result<(), JsValue> {
+        // Create Deno object structure
+        let deno = Object::new();
+        let core = Object::new();
+        let ops = Object::new();
+        
+        // Set up the Deno.core.ops structure
+        Reflect::set(&deno, &"core".into(), &core)?;
+        Reflect::set(&core, &"ops".into(), &ops)?;
+        
+        // Add all ops functions
+        rust_modules::ops::register_all_ops(&ops)?;
+        
+        // Define Deno property on context
+        let deno_descriptor = Object::new();
+        Reflect::set(&deno_descriptor, &"value".into(), &deno)?;
+        Reflect::set(&deno_descriptor, &"configurable".into(), &false.into())?;
+        Reflect::set(&deno_descriptor, &"enumerable".into(), &true.into())?;
+        Reflect::set(&deno_descriptor, &"writable".into(), &false.into())?;
+        
+        Object::define_property(context, &"Deno".into(), &deno_descriptor);
         
         Ok(())
     }
