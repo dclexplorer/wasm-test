@@ -1,51 +1,60 @@
 use wasm_bindgen::prelude::*;
-use js_sys::{Array, Object, Promise};
-use wasm_bindgen_futures::future_to_promise;
+use js_sys::Array;
+use serde::{Serialize, Deserialize};
 use web_sys::console;
 
-pub fn register_ops(ops: &Object) -> Result<(), JsValue> {
-    // op_get_player_data
-    let get_player_data = Closure::wrap(Box::new(|user_id: String| -> Promise {
-        console::log_1(&format!("op_get_player_data called with user_id: {}", user_id).into());
-        
-        future_to_promise(async move {
-            let player_data = Object::new();
-            js_sys::Reflect::set(&player_data, &"userId".into(), &user_id.into()).unwrap();
-            js_sys::Reflect::set(&player_data, &"displayName".into(), &"Test Player".into()).unwrap();
-            Ok(player_data.into())
-        })
-    }) as Box<dyn Fn(String) -> Promise>);
+#[derive(Serialize, Deserialize)]
+pub struct PlayerData {
+    #[serde(rename = "userId")]
+    pub user_id: String,
+    #[serde(rename = "displayName")]
+    pub display_name: String,
+}
+
+#[wasm_bindgen(js_name = "op_get_player_data")]
+pub async fn get_player_data(user_id: String) -> Result<JsValue, JsValue> {
+    console::log_1(&format!("op_get_player_data called with user_id: {}", user_id).into());
     
-    super::ops::register_op(ops, "op_get_player_data", get_player_data.as_ref())?;
-    get_player_data.forget();
+    let player_data = PlayerData {
+        user_id,
+        display_name: "Test Player".to_string(),
+    };
     
-    // op_get_players_in_scene
-    let get_players_in_scene = Closure::wrap(Box::new(|| -> Promise {
-        console::log_1(&"op_get_players_in_scene called".into());
-        
-        future_to_promise(async move {
-            let players = Array::new();
-            players.push(&"0x1234567890abcdef".into());
-            Ok(players.into())
-        })
-    }) as Box<dyn Fn() -> Promise>);
+    Ok(serde_wasm_bindgen::to_value(&player_data)?)
+}
+
+#[wasm_bindgen(js_name = "op_get_players_in_scene")]
+pub async fn get_players_in_scene() -> Result<JsValue, JsValue> {
+    console::log_1(&"op_get_players_in_scene called".into());
     
-    super::ops::register_op(ops, "op_get_players_in_scene", get_players_in_scene.as_ref())?;
-    get_players_in_scene.forget();
+    let players = Array::new();
+    players.push(&"0x1234567890abcdef".into());
+    Ok(players.into())
+}
+
+#[wasm_bindgen(js_name = "op_get_connected_players")]
+pub async fn get_connected_players() -> Result<JsValue, JsValue> {
+    console::log_1(&"op_get_connected_players called".into());
     
-    // op_get_connected_players
-    let get_connected_players = Closure::wrap(Box::new(|| -> Promise {
-        console::log_1(&"op_get_connected_players called".into());
-        
-        future_to_promise(async move {
-            let players = Array::new();
-            players.push(&"0x1234567890abcdef".into());
-            Ok(players.into())
-        })
-    }) as Box<dyn Fn() -> Promise>);
+    let players = Array::new();
+    players.push(&"0x1234567890abcdef".into());
+    Ok(players.into())
+}
+
+#[wasm_bindgen(js_name = "op_player_from_peer_id")]
+pub async fn player_from_peer_id(peer_id: String) -> Result<JsValue, JsValue> {
+    console::log_1(&format!("op_player_from_peer_id called with peer_id: {}", peer_id).into());
+    Ok(JsValue::NULL)
+}
+
+// Register all ops for this module
+pub fn register_ops(ops: &js_sys::Object) -> Result<(), JsValue> {
+    use js_sys::Reflect;
     
-    super::ops::register_op(ops, "op_get_connected_players", get_connected_players.as_ref())?;
-    get_connected_players.forget();
+    Reflect::set(ops, &"op_get_player_data".into(), &get_player_data.into())?;
+    Reflect::set(ops, &"op_get_connected_players".into(), &get_connected_players.into())?;
+    Reflect::set(ops, &"op_get_players_in_scene".into(), &get_players_in_scene.into())?;
+    Reflect::set(ops, &"op_player_from_peer_id".into(), &player_from_peer_id.into())?;
     
     Ok(())
 }

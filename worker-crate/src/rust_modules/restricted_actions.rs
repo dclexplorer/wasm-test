@@ -1,96 +1,55 @@
 use wasm_bindgen::prelude::*;
-use js_sys::{Object, Promise};
-use wasm_bindgen_futures::future_to_promise;
 use web_sys::console;
 
-pub fn register_ops(ops: &Object) -> Result<(), JsValue> {
-    // op_move_player_to - accepts 11 parameters, we'll use rest parameters
-    let move_player = Closure::wrap(Box::new(
-        |x: f64, y: f64, z: f64, has_camera: bool, cam_x: f64, cam_y: f64, cam_z: f64| {
-            // Note: We're dropping the last 4 parameters due to Closure limitation
-            // In practice, you might want to pass an object instead
-            console::log_1(&format!(
-                "op_move_player_to called: pos({},{},{}), camera({},{},{},{})",
-                x, y, z, has_camera, cam_x, cam_y, cam_z
-            ).into());
-        }
-    ) as Box<dyn Fn(f64, f64, f64, bool, f64, f64, f64)>);
+#[wasm_bindgen(js_name = "op_move_player_to")]
+pub fn move_player_to(
+    x: f32, y: f32, z: f32,
+    has_camera_target: bool,
+    camera_x: f32, camera_y: f32, camera_z: f32,
+    has_avatar_target: bool,
+    avatar_x: f32, avatar_y: f32, avatar_z: f32,
+) {
+    console::log_1(&format!("Moving player to ({}, {}, {})", x, y, z).into());
+}
+
+#[wasm_bindgen(js_name = "op_emote")]
+pub fn trigger_emote(emote: String) {
+    console::log_1(&format!("Triggering emote: {}", emote).into());
+}
+
+#[wasm_bindgen(js_name = "op_scene_emote")]
+pub fn trigger_scene_emote(src: String, looping: bool) {
+    console::log_1(&format!("Triggering scene emote: {} (looping: {})", src, looping).into());
+}
+
+#[wasm_bindgen(js_name = "op_change_realm")]
+pub async fn change_realm(realm: String, message: Option<String>) -> Result<JsValue, JsValue> {
+    console::log_1(&format!("Changing realm to: {}", realm).into());
+    Ok(JsValue::from_bool(true))
+}
+
+#[wasm_bindgen(js_name = "op_external_url")]
+pub async fn open_external_url(url: String) -> Result<JsValue, JsValue> {
+    console::log_1(&format!("Opening external URL: {}", url).into());
+    Ok(JsValue::from_bool(true))
+}
+
+#[wasm_bindgen(js_name = "op_open_nft_dialog")]
+pub async fn open_nft_dialog(urn: String) -> Result<JsValue, JsValue> {
+    console::log_1(&format!("op_open_nft_dialog called with URN: {}", urn).into());
+    Ok(JsValue::from_bool(true))
+}
+
+// Register all ops for this module
+pub fn register_ops(ops: &js_sys::Object) -> Result<(), JsValue> {
+    use js_sys::Reflect;
     
-    // Create a wrapper function that accepts all 11 parameters
-    let move_player_wrapper = js_sys::Function::new_with_args(
-        "x,y,z,has_camera,cam_x,cam_y,cam_z,has_avatar,av_x,av_y,av_z",
-        "console.log('op_move_player_to called with all 11 params'); \
-         console.log('pos:', x, y, z); \
-         console.log('camera:', has_camera, cam_x, cam_y, cam_z); \
-         console.log('avatar:', has_avatar, av_x, av_y, av_z);"
-    );
-    
-    super::ops::register_op(ops, "op_move_player_to", &move_player_wrapper)?;
-    move_player.forget();
-    
-    // op_emote
-    let emote = Closure::wrap(Box::new(|emote_id: String| {
-        console::log_1(&format!("op_emote called with: {}", emote_id).into());
-    }) as Box<dyn Fn(String)>);
-    
-    super::ops::register_op(ops, "op_emote", emote.as_ref())?;
-    emote.forget();
-    
-    // op_scene_emote
-    let scene_emote = Closure::wrap(Box::new(|src: String, looping: bool| {
-        console::log_1(&format!("op_scene_emote called with src: {}, looping: {}", src, looping).into());
-    }) as Box<dyn Fn(String, bool)>);
-    
-    super::ops::register_op(ops, "op_scene_emote", scene_emote.as_ref())?;
-    scene_emote.forget();
-    
-    // op_change_realm
-    let change_realm = Closure::wrap(Box::new(|realm: String, message: Option<String>| -> Promise {
-        console::log_1(&format!("op_change_realm called with realm: {}, message: {:?}", realm, message).into());
-        
-        future_to_promise(async move {
-            Ok(JsValue::from_bool(true))
-        })
-    }) as Box<dyn Fn(String, Option<String>) -> Promise>);
-    
-    super::ops::register_op(ops, "op_change_realm", change_realm.as_ref())?;
-    change_realm.forget();
-    
-    // op_external_url
-    let external_url = Closure::wrap(Box::new(|url: String| -> Promise {
-        console::log_1(&format!("op_external_url called with url: {}", url).into());
-        
-        future_to_promise(async move {
-            Ok(JsValue::from_bool(true))
-        })
-    }) as Box<dyn Fn(String) -> Promise>);
-    
-    super::ops::register_op(ops, "op_external_url", external_url.as_ref())?;
-    external_url.forget();
-    
-    // op_open_nft_dialog
-    let open_nft_dialog = Closure::wrap(Box::new(|urn: String| -> Promise {
-        console::log_1(&format!("op_open_nft_dialog called with urn: {}", urn).into());
-        
-        future_to_promise(async move {
-            Ok(JsValue::from_bool(true))
-        })
-    }) as Box<dyn Fn(String) -> Promise>);
-    
-    super::ops::register_op(ops, "op_open_nft_dialog", open_nft_dialog.as_ref())?;
-    open_nft_dialog.forget();
-    
-    // op_set_ui_focus
-    let set_ui_focus = Closure::wrap(Box::new(|element_id: String| -> Promise {
-        console::log_1(&format!("op_set_ui_focus called with element_id: {}", element_id).into());
-        
-        future_to_promise(async move {
-            Ok(JsValue::UNDEFINED)
-        })
-    }) as Box<dyn Fn(String) -> Promise>);
-    
-    super::ops::register_op(ops, "op_set_ui_focus", set_ui_focus.as_ref())?;
-    set_ui_focus.forget();
+    Reflect::set(ops, &"op_move_player_to".into(), &move_player_to.into())?;
+    Reflect::set(ops, &"op_teleport_to".into(), &teleport_to.into())?;
+    Reflect::set(ops, &"op_trigger_emote".into(), &trigger_emote.into())?;
+    Reflect::set(ops, &"op_change_realm".into(), &change_realm.into())?;
+    Reflect::set(ops, &"op_open_external_url".into(), &open_external_url.into())?;
+    Reflect::set(ops, &"op_open_nft_dialog".into(), &open_nft_dialog.into())?;
     
     Ok(())
 }

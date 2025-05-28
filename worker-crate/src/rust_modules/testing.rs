@@ -1,50 +1,53 @@
 use wasm_bindgen::prelude::*;
-use js_sys::{Array, Object, Promise};
-use wasm_bindgen_futures::future_to_promise;
 use web_sys::console;
 
-pub fn register_ops(ops: &Object) -> Result<(), JsValue> {
-    // op_testing_enabled
-    let testing_enabled = Closure::wrap(Box::new(|| -> bool {
-        console::log_1(&"op_testing_enabled called".into());
-        false // Testing disabled by default
-    }) as Box<dyn Fn() -> bool>);
-    
-    super::ops::register_op(ops, "op_testing_enabled", testing_enabled.as_ref())?;
-    testing_enabled.forget();
-    
-    // op_take_and_compare_snapshot
-    let take_and_compare_snapshot = Closure::wrap(Box::new(
-        |src: String, camera_pos: Array, camera_target: Array, size: Array, methods: Object| -> Promise {
-            console::log_1(&format!("op_take_and_compare_snapshot called with src: {}", src).into());
-            
-            future_to_promise(async move {
-                let result = Object::new();
-                js_sys::Reflect::set(&result, &"passed".into(), &true.into()).unwrap();
-                js_sys::Reflect::set(&result, &"diffPercentage".into(), &0.0.into()).unwrap();
-                Ok(result.into())
-            })
-        }
-    ) as Box<dyn Fn(String, Array, Array, Array, Object) -> Promise>);
-    
-    super::ops::register_op(ops, "op_take_and_compare_snapshot", take_and_compare_snapshot.as_ref())?;
-    take_and_compare_snapshot.forget();
-    
-    // op_log_test_result
-    let log_test_result = Closure::wrap(Box::new(|result: JsValue| {
-        console::log_1(&format!("op_log_test_result called with: {:?}", result).into());
-    }) as Box<dyn Fn(JsValue)>);
-    
-    super::ops::register_op(ops, "op_log_test_result", log_test_result.as_ref())?;
-    log_test_result.forget();
-    
-    // op_log_test_plan
-    let log_test_plan = Closure::wrap(Box::new(|plan: JsValue| {
-        console::log_1(&format!("op_log_test_plan called with: {:?}", plan).into());
-    }) as Box<dyn Fn(JsValue)>);
-    
-    super::ops::register_op(ops, "op_log_test_plan", log_test_plan.as_ref())?;
-    log_test_plan.forget();
-    
+#[wasm_bindgen(js_name = "op_testing_enabled")]
+pub fn testing_enabled() -> bool {
+    false // Mock implementation
+}
+
+#[wasm_bindgen(js_name = "op_log_test_result")]
+pub fn log_test_result(result: JsValue) {
+    console::log_1(&format!("Test result: {:?}", result).into());
+}
+
+#[wasm_bindgen(js_name = "op_log_test_plan")]
+pub fn log_test_plan(plan: JsValue) {
+    console::log_1(&format!("Test plan: {:?}", plan).into());
+}
+
+#[wasm_bindgen(js_name = "op_take_and_compare_snapshot")]
+pub async fn op_take_and_compare_snapshot(
+    src_stored_snapshot: String,
+    camera_position: Vec<f32>,
+    camera_target: Vec<f32>,
+    screenshot_size: Vec<f32>,
+    methods: JsValue,
+) -> Result<JsValue, JsValue> {
+    console::log_1(&format!("op_take_and_compare_snapshot called").into());
+    Ok(JsValue::from_bool(true))
+}
+
+#[wasm_bindgen(js_name = "op_test_result")]
+pub async fn test_result(
+    name: String,
+    success: bool,
+    error: Option<String>,
+    stack: Option<String>,
+    total_frames: u32,
+    total_time: f64,
+) -> Result<JsValue, JsValue> {
+    console::log_1(&format!("Test '{}' result - Success: {}", name, success).into());
+    Ok(JsValue::UNDEFINED)
+}
+
+// Register all ops for this module
+pub fn register_ops(ops: &js_sys::Object) -> Result<(), JsValue> {
+    use js_sys::Reflect;
+
+    Reflect::set(ops, &"op_test_plan".into(), &test_plan.into())?;
+    Reflect::set(ops, &"op_test_snapshot".into(), &test_snapshot.into())?;
+    Reflect::set(ops, &"op_test_result".into(), &test_result.into())?;
+
     Ok(())
 }

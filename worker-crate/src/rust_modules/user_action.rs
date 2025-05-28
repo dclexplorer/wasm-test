@@ -1,20 +1,29 @@
 use wasm_bindgen::prelude::*;
-use js_sys::{Object, Promise};
-use wasm_bindgen_futures::future_to_promise;
 use web_sys::console;
 
-pub fn register_ops(ops: &Object) -> Result<(), JsValue> {
-    // op_teleport_to
-    let teleport_to = Closure::wrap(Box::new(|x: i32, y: i32| -> Promise {
-        console::log_1(&format!("op_teleport_to called with x: {}, y: {}", x, y).into());
-        
-        future_to_promise(async move {
-            Ok(JsValue::from_str("Teleported successfully"))
-        })
-    }) as Box<dyn Fn(i32, i32) -> Promise>);
+#[wasm_bindgen(js_name = "op_teleport_to")]
+pub async fn teleport_to(x: i32, y: i32) -> Result<JsValue, JsValue> {
+    console::log_1(&format!("op_teleport_to called with x: {}, y: {}", x, y).into());
+    Ok(JsValue::from_str("Teleported successfully"))
+}
+
+#[wasm_bindgen(js_name = "op_show_alert")]
+pub fn show_alert(title: String, message: String) {
+    console::log_1(&format!("Showing alert - Title: {}, Message: {}", title, message).into());
+}
+
+#[wasm_bindgen(js_name = "op_unsubscribe")]
+pub async fn unsubscribe(event_id: String) -> Result<JsValue, JsValue> {
+    console::log_1(&format!("op_unsubscribe called for event: {}", event_id).into());
+    Ok(JsValue::UNDEFINED)
+}
+
+// Register all ops for this module
+pub fn register_ops(ops: &js_sys::Object) -> Result<(), JsValue> {
+    use js_sys::Reflect;
     
-    super::ops::register_op(ops, "op_teleport_to", teleport_to.as_ref())?;
-    teleport_to.forget();
+    Reflect::set(ops, &"op_subscribe".into(), &subscribe.into())?;
+    Reflect::set(ops, &"op_unsubscribe".into(), &unsubscribe.into())?;
     
     Ok(())
 }

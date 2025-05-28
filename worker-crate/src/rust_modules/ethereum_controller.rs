@@ -1,26 +1,52 @@
 use wasm_bindgen::prelude::*;
-use js_sys::{Object, Promise};
-use wasm_bindgen_futures::future_to_promise;
 use web_sys::console;
 
-pub fn register_ops(ops: &Object) -> Result<(), JsValue> {
-    // op_send_async
-    let send_async = Closure::wrap(Box::new(|method: String, json_params: String| -> Promise {
-        console::log_1(&format!("op_send_async called with method: {}, params: {}", method, json_params).into());
-        
-        future_to_promise(async move {
-            // Return mock response
-            match method.as_str() {
-                "eth_requestAccounts" => Ok(JsValue::from_str("[\"0x1234567890abcdef\"]")),
-                "eth_blockNumber" => Ok(JsValue::from_str("\"0x1234567\"")),
-                "net_version" => Ok(JsValue::from_str("\"1\"")),
-                _ => Ok(JsValue::NULL),
-            }
-        })
-    }) as Box<dyn Fn(String, String) -> Promise>);
+#[wasm_bindgen(js_name = "op_request_ethereum_controller")]
+pub async fn request_ethereum_controller() -> Result<JsValue, JsValue> {
+    console::log_1(&"Requesting Ethereum controller".into());
+    let obj = js_sys::Object::new();
+    js_sys::Reflect::set(&obj, &"message".into(), &"Ethereum controller granted".into())?;
+    Ok(obj.into())
+}
+
+#[wasm_bindgen(js_name = "op_convert_message_to_object")]
+pub async fn convert_message_to_object(message: String) -> Result<JsValue, JsValue> {
+    console::log_1(&format!("op_convert_message_to_object called with message: {}", message).into());
+    let obj = Object::new();
+    Reflect::set(&obj, &"message".into(), &JsValue::from_str(&message))?;
+    Ok(obj.into())
+}
+
+#[wasm_bindgen(js_name = "op_send_async")]
+pub async fn send_async(method: String, json_params: String) -> Result<JsValue, JsValue> {
+    console::log_1(&format!("op_send_async called with method: {}, params: {}", method, json_params).into());
     
-    super::ops::register_op(ops, "op_send_async", send_async.as_ref())?;
-    send_async.forget();
+    // Return mock response
+    match method.as_str() {
+        "eth_requestAccounts" => Ok(JsValue::from_str("[\"0x1234567890abcdef\"]")),
+        "eth_blockNumber" => Ok(JsValue::from_str("\"0x1234567\"")),
+        "net_version" => Ok(JsValue::from_str("\"1\"")),
+        _ => Ok(JsValue::NULL),
+    }
+}
+
+#[wasm_bindgen(js_name = "op_sign_message")]
+pub async fn sign_message(message: String) -> Result<JsValue, JsValue> {
+    console::log_1(&format!("Signing message: {}", message).into());
+    let obj = js_sys::Object::new();
+    js_sys::Reflect::set(&obj, &"signature".into(), &"0xsignature".into())?;
+    js_sys::Reflect::set(&obj, &"message".into(), &message.into())?;
+    Ok(obj.into())
+}
+
+// Register all ops for this module
+pub fn register_ops(ops: &js_sys::Object) -> Result<(), JsValue> {
+    use js_sys::Reflect;
+    
+    Reflect::set(ops, &"op_require_payment".into(), &require_payment.into())?;
+    Reflect::set(ops, &"op_sign_message".into(), &sign_message.into())?;
+    Reflect::set(ops, &"op_send_async".into(), &send_async.into())?;
+    Reflect::set(ops, &"op_convert_message_to_object".into(), &convert_message_to_object.into())?;
     
     Ok(())
 }

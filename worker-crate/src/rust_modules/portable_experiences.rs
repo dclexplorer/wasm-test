@@ -1,47 +1,41 @@
 use wasm_bindgen::prelude::*;
-use js_sys::{Array, Object, Promise};
-use wasm_bindgen_futures::future_to_promise;
+use js_sys::Array;
 use web_sys::console;
 
-pub fn register_ops(ops: &Object) -> Result<(), JsValue> {
-    // op_portable_spawn
-    let portable_spawn = Closure::wrap(Box::new(|pid: String, ens: Option<String>| -> Promise {
-        console::log_1(&format!("op_portable_spawn called with pid: {}, ens: {:?}", pid, ens).into());
-        
-        future_to_promise(async move {
-            let result = Object::new();
-            js_sys::Reflect::set(&result, &"success".into(), &true.into()).unwrap();
-            Ok(result.into())
-        })
-    }) as Box<dyn Fn(String, Option<String>) -> Promise>);
+#[wasm_bindgen(js_name = "op_portable_spawn")]
+pub async fn portable_spawn(pid: String, ens: Option<String>) -> Result<JsValue, JsValue> {
+    console::log_1(&format!("Spawning portable experience: {} (ens: {:?})", pid, ens).into());
+    let obj = js_sys::Object::new();
+    js_sys::Reflect::set(&obj, &"status".into(), &true.into())?;
+    Ok(obj.into())
+}
+
+#[wasm_bindgen(js_name = "op_portable_kill")]
+pub async fn portable_kill(pid: String) -> Result<bool, JsValue> {
+    console::log_1(&format!("Killing portable experience: {}", pid).into());
+    Ok(true)
+}
+
+#[wasm_bindgen(js_name = "op_portable_list")]
+pub async fn portable_list() -> Result<JsValue, JsValue> {
+    console::log_1(&"Listing portable experiences".into());
+    Ok(Array::new().into())
+}
+
+#[wasm_bindgen(js_name = "op_get_portable_experience")]
+pub async fn get_portable_experience(urn: String) -> Result<JsValue, JsValue> {
+    console::log_1(&format!("op_get_portable_experience called with URN: {}", urn).into());
+    Ok(JsValue::NULL)
+}
+
+// Register all ops for this module
+pub fn register_ops(ops: &js_sys::Object) -> Result<(), JsValue> {
+    use js_sys::Reflect;
     
-    super::ops::register_op(ops, "op_portable_spawn", portable_spawn.as_ref())?;
-    portable_spawn.forget();
-    
-    // op_portable_kill
-    let portable_kill = Closure::wrap(Box::new(|pid: String| -> Promise {
-        console::log_1(&format!("op_portable_kill called with pid: {}", pid).into());
-        
-        future_to_promise(async move {
-            Ok(JsValue::from_bool(true))
-        })
-    }) as Box<dyn Fn(String) -> Promise>);
-    
-    super::ops::register_op(ops, "op_portable_kill", portable_kill.as_ref())?;
-    portable_kill.forget();
-    
-    // op_portable_list
-    let portable_list = Closure::wrap(Box::new(|| -> Promise {
-        console::log_1(&"op_portable_list called".into());
-        
-        future_to_promise(async move {
-            let list = Array::new();
-            Ok(list.into())
-        })
-    }) as Box<dyn Fn() -> Promise>);
-    
-    super::ops::register_op(ops, "op_portable_list", portable_list.as_ref())?;
-    portable_list.forget();
+    Reflect::set(ops, &"op_spawn".into(), &portable_spawn.into())?;
+    Reflect::set(ops, &"op_kill".into(), &portable_kill.into())?;
+    Reflect::set(ops, &"op_list_portable_experiences".into(), &portable_list.into())?;
+    Reflect::set(ops, &"op_get_portable_experience".into(), &get_portable_experience.into())?;
     
     Ok(())
 }

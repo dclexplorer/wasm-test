@@ -85,3 +85,6 @@ async fn fetch_scene_code(url: &str) -> Result<js_sys::JsString, JsValue> {
     
     Ok(js_string)
 }
+
+// Re-export all the ops functions at the crate level
+pub use rust_modules::*;

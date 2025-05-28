@@ -1,47 +1,49 @@
 use wasm_bindgen::prelude::*;
-use js_sys::{Array, Object, Promise, Uint8Array};
-use wasm_bindgen_futures::future_to_promise;
 use web_sys::console;
+use js_sys::Array;
 
-pub fn register_ops(ops: &Object) -> Result<(), JsValue> {
-    // op_crdt_send_to_renderer
-    let crdt_send = Closure::wrap(Box::new(|data: Uint8Array| {
-        console::log_1(&format!("op_crdt_send_to_renderer called with {} bytes", data.length()).into());
-    }) as Box<dyn Fn(Uint8Array)>);
+#[wasm_bindgen(js_name = "op_crdt_send_to_renderer")]
+pub fn crdt_send_to_renderer(data: &[u8]) {
+    console::log_1(&format!("Sending {} bytes to renderer", data.len()).into());
+}
+
+#[wasm_bindgen(js_name = "op_crdt_recv_from_renderer")]
+pub fn crdt_recv_from_renderer() -> Vec<u8> {
+    console::log_1(&"Receiving from renderer".into());
+    vec![]
+}
+
+#[wasm_bindgen(js_name = "op_subscribe")]
+pub fn subscribe(event_id: u32) {
+    console::log_1(&format!("Subscribing to event {}", event_id).into());
+}
+
+#[wasm_bindgen(js_name = "op_unsubscribe")]
+pub fn unsubscribe(event_id: u32) {
+    console::log_1(&format!("Unsubscribing from event {}", event_id).into());
+}
+
+#[wasm_bindgen(js_name = "op_send_batch")]
+pub fn send_batch() -> js_sys::Array {
+    console::log_1(&"op_send_batch called".into());
+    js_sys::Array::new() // Return empty events array
+}
+
+#[wasm_bindgen(js_name = "op_get_visible_peers")]
+pub async fn get_visible_peers() -> Result<JsValue, JsValue> {
+    console::log_1(&"op_get_visible_peers called".into());
+    let array = Array::new();
+    Ok(array.into())
+}
+
+// Register all ops for this module
+pub fn register_ops(ops: &js_sys::Object) -> Result<(), JsValue> {
+    use js_sys::Reflect;
     
-    super::ops::register_op(ops, "op_crdt_send_to_renderer", crdt_send.as_ref())?;
-    crdt_send.forget();
-    
-    // op_crdt_recv_from_renderer
-    let crdt_recv = Closure::wrap(Box::new(|| -> Promise {
-        console::log_1(&"op_crdt_recv_from_renderer called".into());
-        
-        future_to_promise(async move {
-            let result = Array::new();
-            // Return empty array for now
-            Ok(result.into())
-        })
-    }) as Box<dyn Fn() -> Promise>);
-    
-    super::ops::register_op(ops, "op_crdt_recv_from_renderer", crdt_recv.as_ref())?;
-    crdt_recv.forget();
-    
-    // op_subscribe
-    let subscribe = Closure::wrap(Box::new(|event_id: String| {
-        console::log_1(&format!("op_subscribe called with event_id: {}", event_id).into());
-    }) as Box<dyn Fn(String)>);
-    
-    super::ops::register_op(ops, "op_subscribe", subscribe.as_ref())?;
-    subscribe.forget();
-    
-    // op_send_batch
-    let send_batch = Closure::wrap(Box::new(|| -> Array {
-        console::log_1(&"op_send_batch called".into());
-        Array::new() // Return empty events array
-    }) as Box<dyn Fn() -> Array>);
-    
-    super::ops::register_op(ops, "op_send_batch", send_batch.as_ref())?;
-    send_batch.forget();
+    Reflect::set(ops, &"op_crdt_send_to_renderer".into(), &crdt_send_to_renderer.into())?;
+    Reflect::set(ops, &"op_crdt_recv_from_renderer".into(), &crdt_recv_from_renderer.into())?;
+    Reflect::set(ops, &"op_crdt_recv_from_renderer_legacy".into(), &crdt_recv_from_renderer_legacy.into())?;
+    Reflect::set(ops, &"op_get_visible_peers".into(), &get_visible_peers.into())?;
     
     Ok(())
 }

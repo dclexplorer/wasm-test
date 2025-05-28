@@ -1,4 +1,7 @@
-const testingEnabled = Deno.core.ops.op_testing_enabled();
+// Import the wasm module (this will be available after wasm-pack build)
+const wasm = require('../../pkg/worker_crate.js');
+
+const testingEnabled = wasm.op_testing_enabled();
 
 function emptyTesting() {
     return {
@@ -17,7 +20,7 @@ function testingModule() {
         }
 
         console.log({ methods })
-        return Deno.core.ops.op_take_and_compare_snapshot(
+        return wasm.op_take_and_compare_snapshot(
             srcStoredSnapshot,
             [cameraPosition.x, cameraPosition.y, cameraPosition.z],
             [cameraTarget.x, cameraTarget.y, cameraTarget.z],
@@ -28,11 +31,11 @@ function testingModule() {
 
     return {
         logTestResult: async function (body) {
-            Deno.core.ops.op_log_test_result(body);
+            wasm.op_log_test_result(body);
             return {}
         },
         plan: async function (body) {
-            Deno.core.ops.op_log_test_plan(body);
+            wasm.op_log_test_plan(body);
             return {}
         },
         setCameraTransform: async function (body) { return {} },

@@ -387,7 +387,7 @@ impl SdkRuntime {
         Reflect::set(&core, &"ops".into(), &ops)?;
         
         // Add all ops functions
-        rust_modules::ops::register_all_ops(&ops)?;
+        rust_modules::register_all_ops(&ops)?;
         
         // Define Deno property on context
         let deno_descriptor = Object::new();
