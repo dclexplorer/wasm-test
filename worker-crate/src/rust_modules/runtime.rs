@@ -58,20 +58,26 @@ pub async fn read_file(file_name: String) -> Result<JsValue, JsValue> {
     Ok(obj.into())
 }
 
+#[wasm_bindgen(js_name = "op_stream_create")]
+pub async fn stream_create() -> Result<JsValue, JsValue> {
+    console::log_1(&"op_stream_create called".into());
+    Ok(JsValue::from_f64(1.0)) // Return mock stream ID
+}
+
+#[wasm_bindgen(js_name = "op_stream_read")]
+pub async fn stream_read(stream_id: f64, buffer_size: u32) -> Result<JsValue, JsValue> {
+    console::log_1(&format!("op_stream_read called with stream_id: {}, buffer_size: {}", stream_id, buffer_size).into());
+    Ok(JsValue::NULL)
+}
+
+#[wasm_bindgen(js_name = "op_stream_write")]
+pub async fn stream_write(stream_id: f64, data: Vec<u8>) -> Result<JsValue, JsValue> {
+    console::log_1(&format!("op_stream_write called with stream_id: {}, data length: {}", stream_id, data.len()).into());
+    Ok(JsValue::from_f64(data.len() as f64))
+}
+
 #[wasm_bindgen(js_name = "op_stream_abort")]
 pub async fn stream_abort(stream_id: f64) -> Result<JsValue, JsValue> {
     console::log_1(&format!("op_stream_abort called with stream_id: {}", stream_id).into());
     Ok(JsValue::UNDEFINED)
-}
-
-// Register all ops for this module
-pub fn register_ops(ops: &js_sys::Object) -> Result<(), JsValue> {
-    use js_sys::Reflect;
-    
-    Reflect::set(ops, &"op_stream_create".into(), &stream_create.into())?;
-    Reflect::set(ops, &"op_stream_read".into(), &stream_read.into())?;
-    Reflect::set(ops, &"op_stream_write".into(), &stream_write.into())?;
-    Reflect::set(ops, &"op_stream_abort".into(), &stream_abort.into())?;
-    
-    Ok(())
 }

@@ -2,6 +2,90 @@ use wasm_bindgen::prelude::*;
 use js_sys::Array;
 use web_sys::console;
 
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_check_for_update)]
+    pub async fn js_check_for_update() -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_motd)]
+    pub async fn js_motd() -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_get_current_login)]
+    pub fn js_get_current_login() -> JsValue;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_get_previous_login)]
+    pub fn js_get_previous_login() -> JsValue;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_login_previous)]
+    pub async fn js_login_previous() -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_login_new_code)]
+    pub async fn js_login_new_code() -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_login_new_success)]
+    pub async fn js_login_new_success(code: String) -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_login_guest)]
+    pub async fn js_login_guest() -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_login_cancel)]
+    pub async fn js_login_cancel() -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_logout)]
+    pub async fn js_logout() -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_settings)]
+    pub async fn js_settings() -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_set_setting)]
+    pub async fn js_set_setting(name: String, value: JsValue) -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_console_command)]
+    pub async fn js_console_command(command: String, args: Array) -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_kernel_fetch_headers)]
+    pub async fn js_kernel_fetch_headers(url: String, method: Option<String>, meta: JsValue) -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_set_avatar)]
+    pub async fn js_set_avatar(base: JsValue, equip: JsValue) -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_native_input)]
+    pub fn js_native_input(enabled: bool);
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_get_bindings)]
+    pub async fn js_get_bindings() -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_set_bindings)]
+    pub async fn js_set_bindings(bindings: JsValue) -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_live_scene_info)]
+    pub async fn js_live_scene_info(parcel: JsValue) -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_get_home_scene)]
+    pub async fn js_get_home_scene() -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_set_home_scene)]
+    pub async fn js_set_home_scene(realm: String, parcel: Array) -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_get_realm_provider)]
+    pub async fn js_get_realm_provider(realm_name: String) -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_get_system_action_stream)]
+    pub async fn js_get_system_action_stream() -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_read_system_action_stream)]
+    pub async fn js_read_system_action_stream(stream_id: f64) -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_get_chat_stream)]
+    pub async fn js_get_chat_stream() -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_read_chat_stream)]
+    pub async fn js_read_chat_stream(stream_id: f64) -> Result<JsValue, JsValue>;
+    
+    #[wasm_bindgen(js_namespace = ["Deno", "core", "ops"], js_name = op_send_chat)]
+    pub async fn js_send_chat(message: String) -> Result<JsValue, JsValue>;
+}
+
 #[wasm_bindgen(js_name = "op_check_for_update")]
 pub async fn check_for_update() -> Result<JsValue, JsValue> {
     console::log_1(&"op_check_for_update called".into());
@@ -170,40 +254,4 @@ pub async fn read_chat_stream(stream_id: f64) -> Result<JsValue, JsValue> {
 pub async fn send_chat(message: String) -> Result<JsValue, JsValue> {
     console::log_1(&format!("op_send_chat called with message: {}", message).into());
     Ok(JsValue::UNDEFINED)
-}
-
-// Register all ops for this module
-pub fn register_ops(ops: &js_sys::Object) -> Result<(), JsValue> {
-    use js_sys::Reflect;
-    
-    // Register all system API ops
-    Reflect::set(ops, &"op_check_for_update".into(), &check_for_update.into())?;
-    Reflect::set(ops, &"op_motd".into(), &motd.into())?;
-    Reflect::set(ops, &"op_get_current_login".into(), &get_current_login.into())?;
-    Reflect::set(ops, &"op_get_previous_login".into(), &get_previous_login.into())?;
-    Reflect::set(ops, &"op_login_previous".into(), &login_previous.into())?;
-    Reflect::set(ops, &"op_login_new_code".into(), &login_new_code.into())?;
-    Reflect::set(ops, &"op_login_new_success".into(), &login_new_success.into())?;
-    Reflect::set(ops, &"op_login_guest".into(), &login_guest.into())?;
-    Reflect::set(ops, &"op_login_cancel".into(), &login_cancel.into())?;
-    Reflect::set(ops, &"op_logout".into(), &logout.into())?;
-    Reflect::set(ops, &"op_settings".into(), &settings.into())?;
-    Reflect::set(ops, &"op_set_setting".into(), &set_setting.into())?;
-    Reflect::set(ops, &"op_console_command".into(), &console_command.into())?;
-    Reflect::set(ops, &"op_kernel_fetch_headers".into(), &kernel_fetch_headers.into())?;
-    Reflect::set(ops, &"op_set_avatar".into(), &set_avatar.into())?;
-    Reflect::set(ops, &"op_native_input".into(), &native_input.into())?;
-    Reflect::set(ops, &"op_get_bindings".into(), &get_bindings.into())?;
-    Reflect::set(ops, &"op_set_bindings".into(), &set_bindings.into())?;
-    Reflect::set(ops, &"op_live_scene_info".into(), &live_scene_info.into())?;
-    Reflect::set(ops, &"op_get_home_scene".into(), &get_home_scene.into())?;
-    Reflect::set(ops, &"op_set_home_scene".into(), &set_home_scene.into())?;
-    Reflect::set(ops, &"op_get_realm_provider".into(), &get_realm_provider.into())?;
-    Reflect::set(ops, &"op_get_system_action_stream".into(), &get_system_action_stream.into())?;
-    Reflect::set(ops, &"op_read_system_action_stream".into(), &read_system_action_stream.into())?;
-    Reflect::set(ops, &"op_get_chat_stream".into(), &get_chat_stream.into())?;
-    Reflect::set(ops, &"op_read_chat_stream".into(), &read_chat_stream.into())?;
-    Reflect::set(ops, &"op_send_chat".into(), &send_chat.into())?;
-    
-    Ok(())
 }

@@ -12,18 +12,14 @@ pub fn show_alert(title: String, message: String) {
     console::log_1(&format!("Showing alert - Title: {}, Message: {}", title, message).into());
 }
 
+#[wasm_bindgen(js_name = "op_subscribe")]
+pub async fn subscribe(event_type: String) -> Result<JsValue, JsValue> {
+    console::log_1(&format!("op_subscribe called for event type: {}", event_type).into());
+    Ok(JsValue::from_str(&format!("subscription-{}", event_type)))
+}
+
 #[wasm_bindgen(js_name = "op_unsubscribe")]
 pub async fn unsubscribe(event_id: String) -> Result<JsValue, JsValue> {
     console::log_1(&format!("op_unsubscribe called for event: {}", event_id).into());
     Ok(JsValue::UNDEFINED)
-}
-
-// Register all ops for this module
-pub fn register_ops(ops: &js_sys::Object) -> Result<(), JsValue> {
-    use js_sys::Reflect;
-    
-    Reflect::set(ops, &"op_subscribe".into(), &subscribe.into())?;
-    Reflect::set(ops, &"op_unsubscribe".into(), &unsubscribe.into())?;
-    
-    Ok(())
 }

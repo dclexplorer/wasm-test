@@ -1,11 +1,13 @@
 use wasm_bindgen::prelude::*;
-use web_sys::console;
 
-#[wasm_bindgen(js_name = "op_testing_enabled")]
-pub fn testing_enabled() -> bool {
-    false // Mock implementation
+use crate::export_globals;
+
+#[wasm_bindgen]
+pub async fn testing_enabled(test: JsValue) -> Result<JsValue, JsValue> {
+    Ok(JsValue::from_bool(false)) // Mock implementation
 }
 
+/*
 #[wasm_bindgen(js_name = "op_log_test_result")]
 pub fn log_test_result(result: JsValue) {
     console::log_1(&format!("Test result: {:?}", result).into());
@@ -28,6 +30,19 @@ pub async fn op_take_and_compare_snapshot(
     Ok(JsValue::from_bool(true))
 }
 
+// Add missing functions
+#[wasm_bindgen(js_name = "op_test_plan")]
+pub async fn test_plan(plan: JsValue) -> Result<JsValue, JsValue> {
+    console::log_1(&format!("op_test_plan called with plan: {:?}", plan).into());
+    Ok(JsValue::UNDEFINED)
+}
+
+#[wasm_bindgen(js_name = "op_test_snapshot")]
+pub async fn test_snapshot(name: String, data: JsValue) -> Result<JsValue, JsValue> {
+    console::log_1(&format!("op_test_snapshot called for test: {}", name).into());
+    Ok(JsValue::UNDEFINED)
+}
+
 #[wasm_bindgen(js_name = "op_test_result")]
 pub async fn test_result(
     name: String,
@@ -40,14 +55,9 @@ pub async fn test_result(
     console::log_1(&format!("Test '{}' result - Success: {}", name, success).into());
     Ok(JsValue::UNDEFINED)
 }
+*/
 
-// Register all ops for this module
-pub fn register_ops(ops: &js_sys::Object) -> Result<(), JsValue> {
-    use js_sys::Reflect;
-
-    Reflect::set(ops, &"op_test_plan".into(), &test_plan.into())?;
-    Reflect::set(ops, &"op_test_snapshot".into(), &test_snapshot.into())?;
-    Reflect::set(ops, &"op_test_result".into(), &test_result.into())?;
-
+pub fn register_ops(object: &js_sys::Object) -> Result<(), JsValue> {
+    export_globals!(testing_enabled);
     Ok(())
 }

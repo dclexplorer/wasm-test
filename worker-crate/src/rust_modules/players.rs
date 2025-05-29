@@ -40,21 +40,3 @@ pub async fn get_connected_players() -> Result<JsValue, JsValue> {
     players.push(&"0x1234567890abcdef".into());
     Ok(players.into())
 }
-
-#[wasm_bindgen(js_name = "op_player_from_peer_id")]
-pub async fn player_from_peer_id(peer_id: String) -> Result<JsValue, JsValue> {
-    console::log_1(&format!("op_player_from_peer_id called with peer_id: {}", peer_id).into());
-    Ok(JsValue::NULL)
-}
-
-// Register all ops for this module
-pub fn register_ops(ops: &js_sys::Object) -> Result<(), JsValue> {
-    use js_sys::Reflect;
-    
-    Reflect::set(ops, &"op_get_player_data".into(), &get_player_data.into())?;
-    Reflect::set(ops, &"op_get_connected_players".into(), &get_connected_players.into())?;
-    Reflect::set(ops, &"op_get_players_in_scene".into(), &get_players_in_scene.into())?;
-    Reflect::set(ops, &"op_player_from_peer_id".into(), &player_from_peer_id.into())?;
-    
-    Ok(())
-}
