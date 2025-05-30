@@ -1,12 +1,5 @@
 use wasm_bindgen::prelude::*;
 
-use crate::export_globals;
-
-#[wasm_bindgen]
-pub async fn testing_enabled(test: JsValue) -> Result<JsValue, JsValue> {
-    Ok(JsValue::from_bool(false)) // Mock implementation
-}
-
 /*
 #[wasm_bindgen(js_name = "op_log_test_result")]
 pub fn log_test_result(result: JsValue) {
@@ -57,7 +50,7 @@ pub async fn test_result(
 }
 */
 
-pub fn register_ops(object: &js_sys::Object) -> Result<(), JsValue> {
-    export_globals!(testing_enabled);
-    Ok(())
+#[wasm_bindgen]
+pub async fn testing_enabled(test: JsValue) -> Result<JsValue, JsValue> {
+    Ok(JsValue::from_bool(false)) // Mock implementation
 }

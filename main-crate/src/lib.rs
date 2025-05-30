@@ -7,7 +7,11 @@ use worker::WorkerHandle;
 pub fn start() -> Result<(), JsValue> {
     web_sys::console::log_1(&"[MAIN] Start".into());
 
-    let _ = WorkerHandle::spawn()?;
+    wasm_bindgen_futures::spawn_local(async {
+        if let Err(e) = WorkerHandle::spawn().await {
+            web_sys::console::error_1(&e);
+        }
+    });
 
     Ok(())
 }

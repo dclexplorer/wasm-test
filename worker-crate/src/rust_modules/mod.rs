@@ -15,7 +15,6 @@
 
 use wasm_bindgen::JsValue;
 
-pub mod export_global;
 // pub mod user_identity;
 // pub mod user_action;
 pub mod testing;
@@ -32,6 +31,5 @@ pub mod testing;
 
 
 pub fn register_all_ops(object: &js_sys::Object) -> Result<(), JsValue> {
-    testing::register_ops(object)?;
     Ok(())
 }
