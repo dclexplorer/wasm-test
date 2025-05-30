@@ -2,9 +2,9 @@
 let read_shared;
 
 self.onmessage = async (event) => {
-    const { type, wasmBytes, memory } = event.data;
-
+    const { type } = event.data;
     if (type === 'INIT_WASM') {
+        const { wasmBytes, memory } = event.data;
         console.log("[Worker JS] Received INIT_WASM message.");
         if (!wasmBytes || !memory) {
             console.error("[Worker JS] Wasm bytes or memory not received.");

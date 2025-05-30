@@ -51,7 +51,7 @@ impl WorkerHandle {
             let message = js_sys::Object::new();
             js_sys::Reflect::set(&message, &"type".into(), &"INIT_WASM".into()).unwrap();
             js_sys::Reflect::set(&message, &"wasmBytes".into(), &wasm_bytes).unwrap();
-            js_sys::Reflect::set(&message, &"sharedBuffer".into(), &shared_array_buffer).unwrap();
+            js_sys::Reflect::set(&message, &"memory".into(), &shared_array_buffer).unwrap();
             
             worker_clone.post_message(&message).unwrap();
             web_sys::console::log_1(&"[MAIN] WASM bytes and SharedArrayBuffer sent".into());
