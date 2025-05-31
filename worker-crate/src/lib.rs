@@ -3,7 +3,6 @@ use scene_executor::run_scene;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::DedicatedWorkerGlobalScope;
-use js_sys::SharedArrayBuffer;
 use wasm_bindgen_futures::spawn_local;
 
 mod sandbox;
@@ -12,27 +11,12 @@ mod sdk_runtime;
 mod rust_modules;
 mod scene_executor;
 
-#[wasm_bindgen(start)]
-pub fn main_js() -> Result<(), JsValue> {
+#[wasm_bindgen]
+pub fn start() -> Result<(), JsValue> {
     web_sys::console::log_1(&"[WORKER] Main JS...".into());
-    let global = js_sys::global().dyn_into::<DedicatedWorkerGlobalScope>()?;
-    
-    let onmsg = Closure::<dyn FnMut(_)>::new(move |evt: web_sys::MessageEvent| {
-        web_sys::console::log_1(&"[WORKER] On Message".into());
-        let data = evt.data();
-        
-        // Check if it's an object with buffer and context
-        if let Ok(buffer) = data.dyn_into::<SharedArrayBuffer>() {
-            web_sys::console::log_1(&"[WORKER] Shared Buffer Received".into());
-            // TODO: SharedBuffer Received in the WebWorker...
-        }
-    });
-    
-    global.set_onmessage(Some(onmsg.as_ref().unchecked_ref()));
-    onmsg.forget();
     
     // Spawn the async task and forget about it
-    spawn_local(async move {
+    /*spawn_local(async move {
         // Fetch the scene code from external file
         match fetch_scene_code("http://localhost:8000/test_scene_runtime.js").await {
             Ok(scene_code) => {
@@ -45,12 +29,12 @@ pub fn main_js() -> Result<(), JsValue> {
                 web_sys::console::error_1(&format!("Failed to fetch scene code: {:?}", e).into());
             }
         }
-    });
+    });*/
     
     Ok(())
 }
 
-async fn fetch_scene_code(url: &str) -> Result<js_sys::JsString, JsValue> {
+/*async fn fetch_scene_code(url: &str) -> Result<js_sys::JsString, JsValue> {
     // In a worker context, we use the global scope which has fetch
     let global = js_sys::global();
     let worker_global: &DedicatedWorkerGlobalScope = global.dyn_ref()
@@ -84,7 +68,7 @@ async fn fetch_scene_code(url: &str) -> Result<js_sys::JsString, JsValue> {
         .map_err(|_| JsValue::from_str("Failed to convert to JsString"))?;
     
     Ok(js_string)
-}
+}*/
 
 // Re-export all the ops functions at the crate level
 pub use rust_modules::*;

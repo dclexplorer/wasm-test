@@ -13,15 +13,22 @@ self.onmessage = async (event) => {
         }
         try {
             console.log("[Worker JS] Importing wasm-bindgen glue code...");
-            const initModule = await import('./pkg/wasm_shared.js');
+            // Debug: log worker location info
+            const workerUrl = self.location.origin + '/pkg/worker_crate.js'
+            
+            // Try a direct import without URL construction
+            const initModule = await import(workerUrl);
             
             console.log("[Worker JS] Initializing Wasm module (Instance B) in worker...");
+            console.log("[Worker JS] initModule stringify", JSON.stringify(initModule));
             // Initialize the Wasm module with the received bytes and SHARED memory
             await initModule.default({wasmBytes, memory});
             console.log("[Worker JS] Wasm module (Instance B) initialized in worker.");
 
+            await initModule.start()
+
             // Assign the specific Rust functions we need from the initialized module
-            read_shared = initModule.read_shared_from_worker;
+            //read_shared = initModule.read_shared_from_worker;
 
 
             self.postMessage("Worker Wasm (Instance B) initialized successfully.");

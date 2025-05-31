@@ -1,4 +1,3 @@
-use protocol_crate::SharedChannel;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{BlobPropertyBag, Blob, Worker, Url, Request, RequestInit, Response};
@@ -39,22 +38,28 @@ impl WorkerHandle {
         let wasm_bytes = JsFuture::from(wasm_resp.array_buffer()?).await?;
         web_sys::console::log_1(&"[MAIN] WASM bytes fetched successfully".into());
 
-        let shared_channel = SharedChannel::new()?;
-        let shared_array_buffer = shared_channel.buffer().clone();
+        // Create WebAssembly.Memory with shared memory
+        let memory_descriptor = js_sys::Object::new();
+        js_sys::Reflect::set(&memory_descriptor, &"initial".into(), &JsValue::from(32))?; // 32 pages = 2MB
+        js_sys::Reflect::set(&memory_descriptor, &"maximum".into(), &JsValue::from(256))?; // 256 pages = 16MB
+        js_sys::Reflect::set(&memory_descriptor, &"shared".into(), &JsValue::from(true))?;
         
-        // Delay sending both WASM bytes and SharedArrayBuffer to ensure worker is ready
+        let memory = js_sys::WebAssembly::Memory::new(&memory_descriptor)?;
+        web_sys::console::log_1(&"[MAIN] WebAssembly.Memory created".into());
+        
+        // Delay sending both WASM bytes and Memory to ensure worker is ready
         let worker_clone = worker.clone();
         let timeout = Closure::<dyn FnMut()>::new(move || {
-            web_sys::console::log_1(&"[MAIN] Sending WASM bytes and SharedArrayBuffer to worker...".into());
+            web_sys::console::log_1(&"[MAIN] Sending WASM bytes and Memory to worker...".into());
             
-            // Create message object with both WASM bytes and shared buffer
+            // Create message object with both WASM bytes and memory
             let message = js_sys::Object::new();
             js_sys::Reflect::set(&message, &"type".into(), &"INIT_WASM".into()).unwrap();
             js_sys::Reflect::set(&message, &"wasmBytes".into(), &wasm_bytes).unwrap();
-            js_sys::Reflect::set(&message, &"memory".into(), &shared_array_buffer).unwrap();
+            js_sys::Reflect::set(&message, &"memory".into(), &memory).unwrap();
             
             worker_clone.post_message(&message).unwrap();
-            web_sys::console::log_1(&"[MAIN] WASM bytes and SharedArrayBuffer sent".into());
+            web_sys::console::log_1(&"[MAIN] WASM bytes and Memory sent".into());
         });
         
         let window = web_sys::window().unwrap();
