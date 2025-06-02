@@ -11,11 +11,8 @@ crate-type = ["cdylib"]
 wasm-bindgen   = "0.2"     # no extra features needed
 wasm-bindgen-futures = "0.4"
 js-sys         = "0.3"     # SharedArrayBuffer bindings
-web-sys = { version = "0.3", features = ["DedicatedWorkerGlobalScope", "MessageEvent", "Window", "Performance", "console", "Worker", "BlobPropertyBag", "Blob", "Url"] }
+web-sys = { version = "0.3", features = ["DedicatedWorkerGlobalScope", "MessageEvent", "Window", "Performance", "console", "Worker", "BlobPropertyBag", "Blob", "Url", "Request", "RequestInit", "Response"] }
 protocol-crate = { path = "../protocol-crate" }
-
-[build-dependencies]
-base64 = "0.21"
 
 # Development profile optimizations
 [profile.dev]

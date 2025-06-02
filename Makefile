@@ -5,12 +5,12 @@ export RUSTFLAGS = -C target-feature=+atomics,+bulk-memory,+mutable-globals
 
 # Fast development build
 dev:
-	wasm-pack build worker-crate --target no-modules --dev --no-opt --out-dir ../webroot/pkg
+	wasm-pack build worker-crate --target web --dev --no-opt --out-dir ../webroot/pkg
 	wasm-pack build main-crate --target web --dev --no-opt --out-dir ../webroot/pkg
 
 # Optimized release build (slow but small)
 release:
-	wasm-pack build worker-crate --target no-modules --release --out-dir ../webroot/pkg
+	wasm-pack build worker-crate --target web --release --out-dir ../webroot/pkg
 	wasm-pack build main-crate --target web --release --out-dir ../webroot/pkg
 
 # Clean build artifacts
